@@ -1,0 +1,93 @@
+#footer .frame{
+  margin-top:140px;
+  float:left;
+  width:100%;
+  position:relative;
+  z-index:22;
+  font-size:11px;
+  line-height:13px;
+  color:#285500;
+  text-align:center;
+}
+#footer .nav{
+  width:100%;
+  overflow:hidden;
+  position:relative;
+}
+#footer .nav-holder{
+  position:relative;
+  left:50%;
+  float:left;
+}
+#footer .nav-frame{
+  float:left;
+  left:-50%;
+  position:relative;
+  padding:0 0 0 26px;
+  background:url(../images/bg-nav-footer.gif) no-repeat;
+}
+#footer .nav-block{
+  float:left;
+  background:url(../images/bg-nav-footer.gif) no-repeat 100% -53px;
+  margin:0 -24px 0 0;
+  position:relative;
+  padding:7px 24px 5px 0;
+}
+#footer .order{
+  font:bold 24px/28px Arial, Helvetica, sans-serif;
+}
+#footer .nav ul{
+  margin:10px 0 0;
+  padding:0;
+  list-style:none;
+  overflow:hidden;
+  float:left;
+}
+#footer .nav li{
+  float:left;
+  background:url(../images/separator.gif) no-repeat 0 50%;
+  margin:0 9px 0 -2px;
+  padding:0 0 0 10px;
+  display:inline;
+  font:bold 14px/17px Arial, Helvetica, sans-serif;
+}
+#footer .nav li a{color:#2c8941;}
+.menu{
+  margin:15px 0 14px 0;
+  padding:0;
+  list-style:none;
+  position:relative;
+}
+.menu li{
+  display:inline;
+  font:12px/15px Arial, Helvetica, sans-serif;
+  margin:0 2px 0 0;
+  padding:0 0 0 5px;
+  background:url(../images/separator-green.gif) no-repeat 0 55%;
+}
+.menu li:first-child,
+.menu li.first-child{background:none;}
+.menu a{color:#285500;}
+#footer p{margin:0;}
+
+.mod-pizza-logos{
+    margin-bottom: 10px;
+}
+
+.mod-pizza-logos > *{
+    text-align: center;
+    vertical-align: middle;
+}
+
+.bg-logo-hmh-black
+{
+  background: url(../images/classroom/mickey.png) no-repeat;
+  background-size:174px 150px;
+  width: 174px;
+  height: 150px;
+  overflow: hidden;
+  bottom: 5px;
+  left: -110px;
+  position: absolute;
+  display: block;
+}

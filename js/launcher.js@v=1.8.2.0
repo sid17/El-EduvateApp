@@ -1,0 +1,74 @@
+function launchPKP(parameters, buttonId, callBackMethod) {
+	var buttonObject;
+	if (buttonId != null) {
+		buttonObject = getElement(buttonId);
+	}
+	launchPopup(parameters, buttonObject, callBackMethod);
+}
+function launchPopup(parameters, callBackObject, callBackMethod) { 
+  if (appUrl == null) {
+    return;
+  }
+  var url = appUrl;
+  if (parameters && parameters != '') {
+	  url += '?' + parameters;
+  }
+  launch(url, callBackObject, callBackMethod); 
+}
+function launch(path, callBackObject, callBackMethod) {
+  var result = false;
+  var windowName = "pkpapp"
+  if(window && window.open && (window.name != windowName))
+  {
+    // Open a new fullscreen window,
+    // except when the browser forces new windows to become tabs, (ex: Opera)
+    // in which case, it just opens a new tab.
+    var openW;
+    var openH;
+    var specs = 'top=0,left=0,toolbar=no,scrollbars=yes,menubar=no,status=no,location=no,directories=no,resizable=no,titlebar=no,fullscreen=yes';
+
+    if(screen.availWidth && screen.availHeight) {
+        openW = screen.availWidth;
+        openH = screen.availHeight;
+        specs = specs + ',width='+openW+',height='+openH;
+    }
+   
+    var theWindow = window.open(path, windowName, specs);
+    if(theWindow) {
+      theWindow.window.focus();
+      result = true;
+    }
+  }
+  else if(window && window.self && window.self.location && window.self.location.href) {
+	  result = alternativeNavigation(path);
+  }
+
+  if (callBackObject != null && callBackMethod != null && callBackObject[callBackMethod] != null) {
+	  callBackObject[callBackMethod](result, path);
+  }
+  //trackEvent('launch', 'click', 'application launch');
+   onApplicationLaunch();
+}
+function onAirApplicationLaunch() {
+	onApplicationLaunch();
+}
+function onApplicationLaunch() {
+	try {
+		startObserve();
+	} catch (e) {}
+}
+function alternativeNavigation(url) {
+      window.self.location.href = url;
+      return true;
+}
+function getElement(elementId){
+	if(window && window[elementId]){
+		return window[elementId];
+	}
+	else if(document && document[elementId]){
+		return document[elementId];
+	}
+	else {
+		return false;
+	}
+}

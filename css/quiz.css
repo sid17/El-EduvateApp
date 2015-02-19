@@ -1,0 +1,160 @@
+#new{
+ float:left;
+ margin-left: 60px;
+ padding:10px;
+ }
+ #start,#stop,#instruct{
+ float:left;
+ margin-left:100px;
+ padding:10px;
+ }
+.TopMenu{
+padding:10px;
+}
+
+ #img1,#img2,#img3,#img4{
+ float:left;
+ margin-left:80px;
+ margin-top:10px;
+ width:120px;
+ height:120px;
+ border-color: #2b669a;
+ border-radius: 4px;
+ visibility:hidden;
+ }
+ 
+ #Ans1,#Ans2,#Ans3,#Ans4{
+/*background-image: white;linear-gradient(to bottom,#428bca 0,#2d6ca2 100%);*/
+font-size:35px;
+color: black;
+ width:120px;
+ height:50px;
+ float:left;
+ margin-left:80px;
+ border:solid;
+ border-color: #2b669a;
+ border-radius: 4px;
+  visibility:hidden;
+ }
+ #scroll{
+	width:300px;
+	height:350px;
+	background:url(../images/scroll2.png) no-repeat;
+	background-size:280px 340px;
+	position:absolute;
+	bottom:-1300px;
+	left:0px;
+	z-index:5;
+	visibility:hidden;
+}
+#scrollH{
+	width:380px;
+	height:350px;
+	background:url(../images/big-scroll.png) no-repeat;
+	background-size:380px 340px;
+	position:absolute;
+	bottom:-1300px;
+	right:0px;
+	z-index:5;
+	visibility:hidden;
+}
+ #buttonA,#buttonC{
+ float:left;
+ margin-left:150px;
+ padding:10px;
+ visibility:hidden;
+ }
+ #buttonA1,#buttonC1,#buttonB1,#buttonD1{
+ float:left;
+ margin-left:100px;
+ padding:10px;
+ visibility:hidden;
+ }
+  #buttonB,#buttonD{
+ float:left;
+ margin-left:300px;
+ padding:10px;
+ visibility:hidden;
+ }
+ 
+ 
+ #Response{
+ clear:both;
+ }
+/* .score{
+ float:left;
+ margin-left:180px;
+ padding:10px;
+ }
+ .score1{
+ float:left;
+ margin-left:350px;
+ padding:10px;
+ }*/
+ /*.HighScores{
+ clear:both;
+ padding:5px;
+ }*/
+ .ScoreName{
+ top:30px;
+ position:relative;
+ left:110px;
+ }
+ .score,.score1{
+ width:70px;
+ height:28px;
+ top:20px;
+ position:relative;
+ left:110px;
+  margin-bottom:30px;
+ }
+ .scoreC{
+ width:70px;
+ height:28px;
+ top:10px;
+ left:110px;
+ position:relative;
+ margin-bottom:30px;
+ }
+ #Correct,#Missed,#Accuracy{
+ width:50px;
+ height:28px;
+ position:relative;
+ top:-30px;
+ left:100px;
+ }
+ #Speed{
+ width:90px;
+ height:28px;
+ position:relative;
+ top:-30px;
+ left:70px;
+ }
+ .ScoreHead,.HighScores{
+ position:relative;
+ top:40px;
+ left:120px;
+ }
+ #Player{
+ width:200px;
+ position:relative;
+ left:50px;
+ float:left;
+ top:-30px;
+ }
+ #HighName1{
+ float:left;
+ margin-left:20px;
+ margin-top:30px;
+ }
+ #HighAcc1,#HighSpeed1,#HighDiff1{
+ float:left;
+ margin-left:10px;
+ margin-top:30px;
+ }
+ #HighName,#HighAcc,#HighSpeed{
+ float:left;
+ margin-left:40px;
+ margin-top:30px;
+ }
+ 

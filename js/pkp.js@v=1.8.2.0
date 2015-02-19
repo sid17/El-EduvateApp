@@ -1,0 +1,1145 @@
+var PKPUtils = {
+	VARIABLE_DELIMITER: "&",
+	VARIABLE_EQUAL: "=",
+	convertStringToObject: function(stringValue){
+		var parameters = {};
+		if (stringValue != null && stringValue != ""){
+			var variableItems = stringValue.split(PKPUtils.VARIABLE_DELIMITER);
+			var variableCount = variableItems.length;
+			for (var i = variableCount - 1; i >= 0; i--) {
+				var variable = variableItems[i].split(PKPUtils.VARIABLE_EQUAL);
+				var property = variable.shift();
+				var value = variable.join("=");
+				parameters[property] = value;
+			}
+		}
+		return parameters;
+	},
+	mergeObject: function (objectA, objectB){
+		var result = {};
+		for (property in objectA) {
+			result[property] = objectA[property];
+		}
+		for (property in objectB) {
+			result[property] = objectB[property];
+		}
+		return result;
+	},
+	replaceI18N: function(value, objects){
+		var syntax = /(^|.|\r|\n)(\%*(\w+)*%)/;
+		var template = new Template(value, syntax);
+
+		var replaceWithObject = {};
+		var objectCount = objects.length;
+		for (var i = objectCount - 1; i >= 0; i--) {
+			replaceWithObject = PKPUtils.mergeObject(objects[i], replaceWithObject);
+		}
+			
+		return template.evaluate(replaceWithObject);
+	},
+	isEmpty: function(value){
+		return !(value != undefined && value != null && value != "");
+	}
+};
+var PKPAccount = Class.create({
+	initialize: function(data){
+		this.id = data["id"];
+		this.username = data["username"];
+		this.loginCounter = data["login_counter"];
+		this.lastLogin = data["last_login"];
+	}
+});
+var PKPUserProfile = Class.create({
+	initialize: function(data){
+		this.id = data["id"];
+		this.username = data["username"];
+		this.loginCounter = data["login_counter"];
+		this.lastLogin = data["last_login"] != undefined ? data["last_login"] : null;
+		this.lastElementPlayed = data["last_played_date"] != undefined ? data["last_played_date"] : null;
+		this.lastElementPassed = data["last_passed_date"] != undefined ? data["last_passed_date"] : null;
+	}
+});	
+var PKPElement = Class.create({
+	initialize: function(data){
+		this.id = data['id'];
+		this.title = data['title'];
+		this.thumbnail = data['thumbnail'];
+		this.skillCategory = data['categoryName'];
+		this.skillName = data['skillName'];
+		this.maxLevel = data['maxLevel'] != null ? Number(data['maxLevel']) : null;
+	}
+});
+var PKPUserElement = Class.create(PKPElement, {
+	initialize: function($super, data){
+		$super(data);
+		this.lastPlayed = data['lastPlayed'];
+		this.lastPassed = data['lastPassed'];
+		this.currentLevel = data['currentLevel'] != null ? Number(data['currentLevel']) : null;
+		this.isRecommended = data['is_recommended'];
+		this.isLastPassed = data['is_last_passed'];
+	},
+	ratio: function(){
+		return this.currentLevel / this.maxLevel;
+	}
+});
+var PKPApplicationStatus = {
+	APPLICATION_CLOSED: 0,
+	APPLICATION_STARTED: 1,
+	ACCOUNT_LOGGED_IN: 2,
+	USER_LOGGED_IN: 3,
+	APPLICATION_STATUS_0: "application_closed",
+	APPLICATION_STATUS_1: "application_started",
+	APPLICATION_STATUS_2: "application_account_logged",
+	APPLICATION_STATUS_3: "application_user_logged"	
+};
+var PKPApplicationEvent = {
+	APPLICATION_STARTED: "applicationStarted",
+	APPLICATION_STOPPED: "applicationStopped",
+	APPLICATION_ACCOUNT_LOGGED_IN: "applicationAccountLoggedIn",
+	APPLICATION_USER_LOGGED_IN: "applicationUserLoggedIn",
+	APPLICATION_STATUS_CHANGED: "applicationStatusChanged"	
+};
+var PKPPlatformStatus = {
+	INITIALIZING: 0,
+	READY: 1,
+	UPDATING: 2,
+	UPDATED: 3,
+	RELOADING: -1
+};
+var PKPPlatformEvent = {
+		PLATFORM_INITIALIZING: "platformInitializing",
+		PLATFORM_READY: "platformReady",
+		PLATFORM_UPDATING: "platformUpdating",
+		PLATFORM_UPDATED: "platformUpdated",
+		PLATFORM_RELOADING: "platformReloading"
+};
+var DispatcherManager = {
+	callBackMethods: {},
+	addListener: function(eventType, methodCallBack){
+			
+		if (this.callBackMethods[eventType] == null) {
+			this.callBackMethods[eventType] = [];
+		}
+		
+		this.callBackMethods[eventType].push(methodCallBack);
+		
+		return this;
+	},
+	removeListener: function(eventType, methodCallBack){
+		if (this.callBackMethods[eventType] != null) {
+			this.callBackMethods[eventType].indexOf(methodCallBack);
+			if (index != -1) {
+				this.callBackMethods[eventType].splice(index, 1);
+			}
+		}
+		return this;						
+	},
+	dispatchEvent: function(eventType, parameters){
+		if (this.callBackMethods[eventType] != null) {
+			var dispatchEventCallBacks = this.callBackMethods[eventType];
+			var nbCallBacks = dispatchEventCallBacks.length;
+			for (var i = nbCallBacks - 1; i >= 0; i--){
+				try {
+					dispatchEventCallBacks[i](parameters);
+				} catch (e) {}
+			};
+		}	
+	}		
+};
+var Dispatcher = Class.create({
+	callBackMethods: {},
+	addListener: function(eventType, methodCallBack){
+		if (this.callBackMethods[eventType] == null) {
+			this.callBackMethods[eventType] = [];
+		}
+		
+		this.callBackMethods[eventType].push(methodCallBack);
+		
+		return this;
+	},
+	removeListener: function(eventType, methodCallBack){
+		if (this.callBackMethods[eventType] != null) {
+			this.callBackMethods[eventType].indexOf(methodCallBack);
+			if (index != -1) {
+				this.callBackMethods[eventType].splice(index, 1);
+			}
+		}
+		return this;						
+	},
+	dispatchEvent: function(eventType, parameters){
+		if (this.callBackMethods[eventType] != null) {
+			var dispatchEventCallBacks = this.callBackMethods[eventType];
+			var nbCallBacks = dispatchEventCallBacks.length;
+			for (var i = nbCallBacks - 1; i >= 0; i--){
+				try {
+					dispatchEventCallBacks[i](parameters);
+				} catch (e) {}
+			};
+		}
+		DispatcherManager.dispatchEvent(eventType, parameters);
+	}
+});
+var SessionEvent = {
+	ACCOUNT_CHANGED: "accountChanged",
+	
+	USER_CHANGED: "userChanged",
+	
+	USER_LAST_PLAYED_CHANGED: "userLastPlayedChanged",
+	USER_RECOMMENDED_CHANGED: "userRecommendedChanged",
+	USER_PROGRESSION_CHANGED: "userProgressionChanged",
+	
+	PLATFORM_STATUS_CHANGED: "platformStatusChanged"	
+};
+var SessionDispatcher = Class.create(Dispatcher, {
+	RESUMED: "resumed",
+	PAUSED: "paused",
+
+	version: '1.0.0',
+	
+	applicationStatus: null,
+	platformStatus: null,
+	
+	account: null,
+	user: null,
+	userProgression: null,
+	elementsPlayed: [],
+	elementsRecommended: [],
+	components: [],
+
+	pause: function(){
+		this.dispatchEvent(PKPComponents.PAUSED);
+		return this;
+	},
+	resume: function(){
+		this.dispatchEvent(PKPComponents.RESUMED);
+		return this;
+	},
+	clearData: function(){
+		this.clearHistory();
+		this.clearRecommended();
+		this.clearUserProgression();
+		
+		return this;
+	},
+	setApplicationStatus: function(value){
+		if (value != this.applicationStatus) {
+			this.applicationStatus = value;
+			this.dispatchEvent(PKPApplicationEvent.APPLICATION_STATUS_CHANGED);
+			
+			this.dispatchApplicationStatus();
+		}
+		return this;
+	},
+	getApplicationStatus: function() {
+		return this.applicationStatus;
+	},
+	getStatusAsString: function() {
+		return PKPApplicationStatus["APPLICATION_STATUS_" + this.applicationStatus];
+	},
+	dispatchApplicationStatus: function(){
+		var eventType;
+		switch (this.applicationStatus) {
+		case PKPApplicationStatus.APPLICATION_CLOSED:
+			eventType = PKPApplicationEvent.APPLICATION_STOPPED;
+			break;
+		case PKPApplicationStatus.APPLICATION_STARTED:
+			eventType = PKPApplicationEvent.APPLICATION_STARTED;
+			break;
+		case PKPApplicationStatus.ACCOUNT_LOGGED_IN:
+			eventType = PKPApplicationEvent.APPLICATION_ACCOUNT_LOGGED_IN;
+			break;
+		case PKPApplicationStatus.USER_LOGGED_IN:
+			eventType = PKPApplicationEvent.APPLICATION_USER_LOGGED_IN;
+			break;
+		}
+		this.dispatchEvent(eventType, this.applicationStatus);
+	},
+	setPlatformStatus: function(value){
+		if (value != this.platformStatus) {
+			this.platformStatus = value;
+			this.dispatchEvent(SessionEvent.PLATFORM_STATUS_CHANGED);
+			
+			this.dispatchPlatformStatus();
+		}
+		return this;
+	},
+	getPlatformStatus: function() {
+		return this.platformStatus;
+	},
+	dispatchPlatformStatus: function(){
+		var eventType;
+		switch (this.platformStatus) {
+		case PKPPlatformStatus.INITIALIZING:
+			eventType = PKPPlatformEvent.APPLICATION_STOPPED;
+			break;
+		case PKPPlatformStatus.INITIALIZING:
+			eventType = PKPPlatformEvent.APPLICATION_STARTED;
+			break;
+		case PKPPlatformStatus.UPDATING:
+			eventType = PKPPlatformEvent.APPLICATION_ACCOUNT_LOGGED_IN;
+			break;
+		case PKPPlatformStatus.UPDATED:
+			eventType = PKPPlatformEvent.APPLICATION_USER_LOGGED_IN;
+			break;
+		case PKPPlatformStatus.RELOADING:
+			eventType = PKPPlatformEvent.PLATFORM_RELOADING;
+			break;
+		}
+		this.dispatchEvent(eventType, this.applicationStatus);
+	},
+	setAccount: function(value){
+		if (value == null || this.account == null || value.id != this.account.id) {
+			this.clearData();
+			
+			this.account = value;
+			
+			this.dispatchEvent(SessionEvent.ACCOUNT_CHANGED, value);
+		}
+		
+		return this;
+	},
+	getAccount: function(){
+		return this.account;
+	},
+	hasAccount: function(){
+		return (this.account != null);
+	},
+	setUser: function(value){
+		if (this.compareUser(value, this.user) === false) {
+			if (this.user != null && value.id != this.user.id) {
+			  this.clearData();
+			}
+			
+			this.user = value;
+			this.dispatchEvent(SessionEvent.USER_CHANGED, value);
+		}
+		return this;
+	},
+	getUser: function(){
+		return this.user;
+	},
+	compareUser: function(userA, userB){
+		var properties = ['id', 'username', 'loginCounter', 'lastLogin', 'lastElementPlayed', 'lastElementPassed'];
+		return this.compareList(userA, userB, properties);
+	},
+	hasUser: function(){
+		return (this.user != null);
+	},
+	compareElement: function(elementA, elementB){
+		var properties = ['lastPlayed', 'lastPassed', 'currentLevel', 'isRecommended', 'isLastPassed'];
+		return this.compareList(elementA, elementB, properties);
+	},
+	compareList: function(listA, listB, properties) {
+		if ((listA == null || listB == null) && (listA != listB)) {
+			return false;
+		}
+		var count = properties.length;
+		for (var i = 0; i < count; i++) {
+			var property = properties[i];
+			var valueA = listA[property] != null ? listA[property].toString() : listA[property];
+			var valueB = listB[property] != null ? listB[property].toString() : listB[property];
+			if (valueA != valueB) {
+				return false;
+			}			
+		}
+		return true;
+	},
+	setUserProgression: function(value){
+		if (value != this.userProgression) {
+			this.userProgression = value;
+			this.dispatchEvent(SessionEvent.USER_PROGRESSION_CHANGED, value);
+		}
+		return this;
+	},
+	getUserProgression: function(value){
+		return this.userProgression;
+	},
+	addToHistory: function(value){
+		var elementHistoryIndex = -1;
+		if (this.elementsPlayed == null){
+			this.elementsPlayed = [];
+		} else {
+			elementHistoryIndex = this.indexOfElement(value, this.elementsPlayed);
+		}
+		var elementLastPlayed = this.elementsPlayed.length > 0 ? this.elementsPlayed[0] : null;
+		if (elementHistoryIndex != 0 || this.compareElement(value, elementLastPlayed) === false) {
+			if (value != null) {
+				if (elementHistoryIndex != -1){
+					this.elementsPlayed.splice(elementHistoryIndex, 1, value);
+				} else if (elementHistoryIndex != 0){
+					this.elementsPlayed.unshift(value);
+				}
+			}
+			this.dispatchEvent(SessionEvent.USER_LAST_PLAYED_CHANGED, value);
+		}
+		return this;
+	},
+	addToRecommended: function(value){
+		var elementRecommendedIndex = -1;
+		if (this.elementsRecommended == null){
+			this.elementsRecommended = [];
+		} else {
+			elementRecommendedIndex = this.indexOfElement(value, this.elementsRecommended);
+			
+		}
+		var elementLastRecommended = this.elementsRecommended.length > 0 ? this.elementsRecommended[0] : null;
+		if (elementRecommendedIndex != 0 || this.compareElement(value, elementLastRecommended) === false) {
+			if (value != null) {
+				if (elementRecommendedIndex != -1){
+					this.elementsRecommended.splice(elementRecommendedIndex, 1, value);
+				} else if (elementRecommendedIndex != 0){
+					this.elementsRecommended.unshift(value);
+				}
+			}
+			this.dispatchEvent(SessionEvent.USER_RECOMMENDED_CHANGED, value);
+		}
+		return this;
+	},
+	indexOfElement: function(elementSearch, elementsList){
+		if (elementsList != null && elementSearch != null) {
+			var listCount = elementsList.length;
+			for (var i = 0; i < listCount; i++){
+				var element = elementsList[i];
+				if (element.id == elementSearch.id) {
+					return i;
+				}
+			}
+		}
+		return -1;
+	},
+	clearRecommended: function(){
+		this.elementsRecommended = null;
+		return this;
+	},
+	clearHistory: function(){
+		this.elementsPlayed = null;
+		return this;
+	},
+	clearUserProgression: function(){
+		this.userProgression = null;
+		
+		return this;
+	},
+	add: function(id){
+		this.components.push(id);
+		
+		return this;
+	},
+	
+	remove: function(id){
+		var index = this.components.indexOf(id);
+		if (index != -1) {
+			this.components.splice(index, 1);
+		}
+		
+		return this;
+	}
+
+});
+
+var PKPBadges = {
+	url: null,
+	appid: null,
+	pubid: null,
+	cc: null,
+	jsCallBack: null,
+	jsAirCallBack: null,
+	badges: null,
+	addBadge: function(badge){
+		if (badges == null) {
+			badges = [];
+		}
+		this.badges.push(badge);
+	},
+	updateParameters: function(url, appid, pubid, cc, jsCallBack){
+		this.url = url;
+		this.appid = appid;
+		this.pubid = pubid;
+		this.cc = cc;
+		this.jsCallBack = jsCallBack;
+	},
+	getBadgeParameters: function(){
+		var parameters = {};
+		parameters.appid     = this.appid;
+		parameters.pubid     = this.pubid;
+		parameters.cc        = this.cc;
+		parameters.jsCallBack = this.jsCallBack;
+		return parameters;
+	}
+};
+var SWFVariable = {
+	version: "9.0.0",
+	defaultWidth: "100%",
+	defaultHeight: "100%"
+};
+var PKPSwfUpdate = Class.create({
+	element: null,
+	parameters: null,
+	initialize: function(element, parameters){
+		this.element = element;
+		this.parameters = parameters;
+	}
+});
+var PKPSwfUpdater = {
+		updatedElements: {},
+		elements: [],
+		periodicalDelay: 2,
+		periodicalExecuter: null,
+		addElement: function (element, parameters) {
+			if (element == null && element["id"] == null) {
+				return;
+			}
+			var elementId = element.id;
+			var nbRetries = this.updatedElements[elementId] != null ? this.updatedElements[elementId] : 0;
+			
+			if (nbRetries >= 3) {
+				return;
+			}
+			var swfUpdate = new PKPSwfUpdate(element, parameters);
+			this.elements.push(swfUpdate);
+			this.startPeriodicalExecuter();
+		},
+		startPeriodicalExecuter: function(){
+			if (this.periodicalExecuter != null) {
+				this.stopPeriodicalExecuter();
+			}
+			var callBackObject = this;
+			if (this.periodicalDelay > 0) {
+				this.periodicalExecuter = new PeriodicalExecuter(function () {callBackObject.onPeriodicalExecuterCompleted();}, this.periodicalDelay);	
+			}
+		},
+		stopPeriodicalExecuter: function() {
+			if (this.periodicalExecuter != null) {
+				this.periodicalExecuter.stop();
+			}
+		},
+		onPeriodicalExecuterCompleted: function(){
+			this.stopPeriodicalExecuter();
+
+			this.execute();
+		},
+		execute: function() {
+			var updateElements = this.elements.slice();
+			this.elements = [];
+			var childCount = updateElements.length;
+			for (var i = childCount - 1; i >= 0; i--) {
+				var updateElement = updateElements[i];
+				
+				var elementId = updateElement.element.id;
+				var nbRetries = this.updatedElements[elementId] != null ? this.updatedElements[elementId] + 1 : 1;
+				this.updatedElements[elementId] = nbRetries;
+				PKPSwf.updateElement(updateElement.element, updateElement.parameters);
+			}
+		}
+}
+var PKPSwf = {
+	swfParameters: {},
+	createElement: function(element, width, height, version, swfParameters, attributes){
+		element = $(element);
+		if (element) {
+			var parametersAsString = element.readAttribute("parameters");
+			var swfFlashVars = {};
+			var swfId = element.readAttribute("id");
+			var swfUrl = element.readAttribute("swf");							
+			var hasBadge = element.hasClassName("badge");
+			if (hasBadge) {
+				swfFlashVars = PKPBadges.getBadgeParameters();
+			}
+			var parameters = PKPUtils.mergeObject(swfFlashVars, PKPUtils.convertStringToObject(parametersAsString));
+			
+			var widthAttribute = element.readAttribute("width");
+			if (widthAttribute != null) {
+				width = widthAttribute;
+			}
+			var heightAttribute = element.readAttribute("height");
+			if (heightAttribute != null) {
+				height = heightAttribute;
+			}
+			
+			var swfAttributes = attributes != null ? attributes : {};
+			swfAttributes["id"] = swfId;
+			swfAttributes["name"] = swfId;
+			
+			var callBackObject = this;
+			
+			swfobject.embedSWF(swfUrl, swfId, width, height, version, false, parameters, swfParameters, swfAttributes, this.onEmbedCompleted);
+		}
+		
+	},
+	onEmbedCompleted: function(result) {
+		var success = result["success"];
+		if (success)
+		{
+		}
+	},
+	createChildElements: function(childs, version, swfParameters, attributes){
+		if (childs) {
+			var childCount = childs.length;
+			for (var i = childCount - 1; i >= 0; i--) {
+				var child = childs[i];
+				PKPSwf.createElement(child, "100%", "100%", version, swfParameters, attributes);
+			}
+		}
+	},
+	updateElement: function (element, parametersAsString){
+		if (element != null) {
+			try {
+				element.init(parametersAsString);
+				return;
+			} 
+			catch (e) {
+				PKPSwfUpdater.addElement(element, parametersAsString)
+			}
+		}						
+	}
+};
+var pkpApplicationVariable = {
+	currentAccountname: null,
+	currentMsHash: null,
+	currentUsername: null,
+	lastStatusReceived: null
+};
+var PKPPlatformVariable = {
+	currentModule: null,
+	currentAction: null,
+	lastUpdateReceived: null
+};
+var PKPPlatformUrl = {
+	platform: null,
+	updateAction: null
+};
+var PKPPlatformCommand = {
+	REFRESH: 'refresh',
+	GOTO: 'goto',
+	LAUNCH_APPLICATION: 'launch_application',
+	ALERT: 'alert',
+	STOP_UPDATE: 'stop_update',
+	CHANGE_UPDATE_DELAY: 'change_update_delay',
+	execute: function(name, parameters) {
+		switch (name) {
+		case PKPPlatformCommand.REFRESH:
+			window.location.href = window.location.href;
+			break;
+			
+		case PKPPlatformCommand.GOTO:
+			if (parameters != null && parameters.url) {
+				window.location.href = parameters.url;
+			}
+			break;
+			
+		case PKPPlatformCommand.LAUNCH_APPLICATION:
+			var parametersAsString = "from=platform";
+			if (parameters != null) {
+				if (parameters.parameters) {
+					parametersAsString += "&" + parameters.parameters;
+				}
+			}
+			launchPKP(parametersAsString);
+			break;
+			
+		case PKPPlatformCommand.STOP_UPDATE:
+			PKP.getConnection().stopPeriodicalExecuter();
+			break;
+			
+		case PKPPlatformCommand.CHANGE_UPDATE_DELAY:
+			if (parameters != null) {
+				var delay = Number(parameters.delay);
+				if (!isNaN(delay)) {
+					PKP.getConnection().setDelay(delay);
+					PKP.getConnection().startPeriodicalExecuter();
+				}
+			}
+			break;
+		case PKPPlatformCommand.ALERT:
+			if (parameters != null && parameters.message != null) {
+				alert(parameters.message);
+			}
+			break;
+		}
+	},
+	executeCommands: function (commands) {
+		if (commands == null) {
+			return;
+		}
+		var commandCount = commands.length;
+		for (var i = commandCount - 1; i >= 0; i--) {
+			var command = commands[i];
+			if (command != null) {
+				PKPPlatformCommand.execute(command.name, command.parameters);
+			}
+		}			
+	}
+}
+var PKPRequestParser = {
+	parse: function(request) {
+		var htmlVariables;;
+		var headerJSON = request.headerJSON;
+		if (headerJSON != null) {
+			if (headerJSON.htmlVariables) {
+				htmlVariables = headerJSON.htmlVariables;
+			}
+			this.parseJSON(headerJSON);
+		}
+		var responseText = request.responseText;
+		if (responseText != null) {
+			this.parseText(responseText, htmlVariables);
+		}		
+	},
+	parseJSON: function(json) {
+		var session = PKP.getSession();
+		if (json.commands) {
+			PKPPlatformCommand.executeCommands(json.commands);
+		}
+		if (json.state != null) {
+			var currentModule = json.state["current_module"]; 
+			var currentAction = json.state["current_action"]; 
+			if (currentModule != null) {
+				PKPPlatformVariable.currentModule = currentModule;
+			}
+			if (currentModule != null) {
+				PKPPlatformVariable.currentAction = currentAction;
+			}
+		}
+		if (json.account != null) {
+			var account = new PKPAccount(json.account);
+			session.setAccount(account);
+		}
+		
+		if (json.user != null) {
+			var userProfile = new PKPUserProfile(json.user);
+			session.setUser(userProfile);
+		}		
+
+		if (json.last_played != null) {
+			var lastElementsPlayed = json.last_played;
+			var lastElementsPlayedCount = lastElementsPlayed.length;
+			if (lastElementsPlayedCount > 0) {
+				for (var i = lastElementsPlayedCount - 1; i >= 0; i--) {
+					var lastPlayedElementData = lastElementsPlayed[i];
+					var lastPlayedElement = new PKPUserElement(lastPlayedElementData);
+					session.addToHistory(lastPlayedElement)
+				}			
+			} else {
+				session.addToHistory(null);
+			}
+		}
+
+		if (json.last_recommended != null) {
+			var lastRecommended = json.last_recommended;
+			var lastRecommendedCount = lastRecommended.length;
+			if (lastRecommendedCount > 0 ) {
+				for (var i = lastRecommendedCount - 1; i >= 0; i--) {
+					var lastRecommendedElementData = lastRecommended[i];
+					var lastRecommendedElement = new PKPUserElement(lastRecommendedElementData);
+					session.addToRecommended(lastRecommendedElement)
+				}
+			} else {
+				session.addToRecommended(null);
+			}
+		}
+		
+		if (json.user_progression != null) {
+			var lastUserProgression = json.user_progression['percent'];
+			session.setUserProgression(lastUserProgression);
+		}
+	
+	},
+	parseText: function(text, htmlVariables) {
+		var html = text.stripScripts();
+		if (htmlVariables != null) {
+			html = PKPUtils.replaceI18N(html, htmlVariables);
+		}
+		if (html != '') {
+		  var componentContainer = new Element("div")
+		  componentContainer.innerHTML = html;
+		  var childComponents = componentContainer.childElements();
+		  var childsCount = childComponents.length;
+
+		  for (var index = 0; index < childsCount; ++index) {
+		    var childComponent = childComponents[index];
+		    var childComponentId = childComponent.id;
+		    if (childComponentId == "") {continue;}
+		    var currentComponent = $(childComponentId);
+		    var componentType = childComponent.readAttribute("sourceType");
+		    if (componentType == "flash") {
+		      if (currentComponent == null) {
+		    	  document.body.appendChild(childComponent);
+		      }
+		      else
+		      {
+			    var parameters = childComponent.readAttribute("parameters");
+				try {
+			      currentComponent.init(parameters);
+				} catch (e) {}
+		      }	
+			} else {
+			  if (currentComponent != null) {
+			    currentComponent.update(childComponent.innerHTML);
+			    currentComponent.writeAttribute('style', childComponent.readAttribute("style"));
+			  } else {
+		        document.body.appendChild(childComponent);
+		      }
+		    }
+		  }
+			var buttonParams = {"wmode": "transparent", "menu": false};
+			PKPSwf.createChildElements($$("div.flash"), "9.0.0", buttonParams);	
+		}
+	}
+
+};
+
+var PKPComm = Class.create(Dispatcher, {
+	initialize: function(url, periodicalDelay, periodicalAutomatic){
+		this.url = url;
+		this.periodicalDelay = periodicalDelay;
+		this.periodicalAutomatic = periodicalAutomatic;;
+	},
+	periodicalExecuter: null,
+	lastUpdateReceived: null,
+	lastRequestData: null,
+	lastAjaxRequest: null,
+	onUpdateComponentReceived: function(request, json){
+		this.lastAjaxRequest = null;
+		this.lastUpdateReceived = new Date();
+		this.dispatchEvent(PKPPlatformEvent.PLATFORM_UPDATED, request);
+	},
+	onUpdateComponentLoading: function() {
+		this.dispatchEvent(PKPPlatformEvent.PLATFORM_UPDATING);
+	},
+	updatePlatform: function(){
+		if (this.lastAjaxRequest != null) {
+			return;
+		}
+		var requestParameters = this.buildPlatformParameters();
+		var callBackObject = this;
+		var request = new Ajax.Request(
+				this.url,
+				{
+					parameters: requestParameters,
+					requestHeaders: {Accept: 'application/json'},
+					onComplete: function (request, json) {callBackObject.onUpdateComponentReceived(request, json);}, 
+					onLoading: function (request, json) {callBackObject.onUpdateComponentLoading(request, json);}
+				}
+			);
+		this.lastAjaxRequest = request;
+	},
+	buildPlatformParameters: function(){
+		return {};
+	},
+	setDelay: function(delay){
+		this.periodicalDelay = (delay / 1000);
+	},	
+	setAutomatic: function(value) {
+		this.periodicalAutomatic = value;
+	},
+	startPeriodicalExecuter: function(){
+		if (this.periodicalExecuter != null) {
+			this.stopPeriodicalExecuter();
+		}
+		var callBackObject = this;
+		if (this.periodicalDelay > 0) {
+			this.periodicalExecuter = new PeriodicalExecuter(function () {callBackObject.onPeriodicalExecuterCompleted();}, this.periodicalDelay);	
+		}
+	},
+	stopPeriodicalExecuter: function() {
+		if (this.periodicalExecuter != null) {
+			this.periodicalExecuter.stop();
+		}
+	},
+	onPeriodicalExecuterCompleted: function(){
+		if (this.periodicalAutomatic === false || this.periodicalDelay <= 0) {
+			this.stopPeriodicalExecuter();
+		}
+		this.updatePlatform();
+	}
+});
+
+var PKPFactory = {
+	createAccount: function(data){
+		var account = new PKPAccount(data);
+		return account;
+	},
+	createUserProfile: function(data){
+		var userProfile = new PKPUserProfile(data);
+		return userProfile;
+	},
+	createUserElement: function(data){
+		var userELement = new PKPUserElement(data);
+		return userElement;
+	}	
+};
+
+var PKPPlatformUtils = {
+	buildPlatformParameters: function() {
+		var requestParameters = {};
+		if (PKPPlatformVariable.currentModule != null) {
+			requestParameters['current_module'] = PKPPlatformVariable.currentModule;
+		}
+		if (PKPPlatformVariable.currentAction != null) {
+			requestParameters['current_action'] = PKPPlatformVariable.currentAction;
+		}
+
+		
+		
+		var session = PKP.session;
+		
+		requestParameters['application_status'] = session.getStatusAsString();
+		
+		var account = session.account;
+		if (account != null) {
+			requestParameters['account_name'] = account.username;
+			requestParameters['account_login_counter'] = account.loginCounter;
+		}
+		
+		var msHash = pkpApplicationVariable.currentMsHash;
+		if (msHash != undefined && msHash != null) {
+			requestParameters['p'] = msHash;
+		}
+		var user = session.user;
+		if (user != undefined && PKPUtils.isEmpty(user) === false) {
+			requestParameters['user_profile_name'] = user.username;
+			requestParameters['user_profile_last_login'] = user.lastLogin;
+			if (user.lastElementPlayed != undefined && PKPUtils.isEmpty(user.lastElementPlayed) === false) {
+				requestParameters['user_profile_last_element_played'] = user.lastElementPlayed;
+			}
+			if (user.lastElementPassed != undefined && PKPUtils.isEmpty(user.lastElementPassed) === false) {
+				requestParameters['user_profile_last_element_passed'] = user.lastElementPassed;
+			}
+			var userProgression = session.userProgression;
+			if (userProgression != undefined && PKPUtils.isEmpty(userProgression) === false) {
+				requestParameters['user_progression'] = userProgression;
+			}
+
+			var lastPlayedElements = session.elementsPlayed;
+			if (lastPlayedElements != undefined && PKPUtils.isEmpty(lastPlayedElements) === false) {
+				var lastPlayedElement = lastPlayedElements.length > 0 ? lastPlayedElements[0] : null;
+				if (lastPlayedElement != undefined) {
+					requestParameters['last_played_element_id'] = lastPlayedElement.id;
+				}
+			}
+			var lastRecommendedElements = session.elementsRecommended;
+			if (lastRecommendedElements != undefined && PKPUtils.isEmpty(lastRecommendedElements) === false) {
+				var lastRecommendedElement = lastRecommendedElements.length > 0 ? lastRecommendedElements[0] : null;
+				if (lastRecommendedElement != null) {
+					requestParameters['last_recommended_element_id'] = lastRecommendedElement.id;
+				}
+			}
+		}
+		return requestParameters;		
+	}
+};
+
+var PKP = {
+	session: null,
+	connection: null,
+	loaded: false,
+	getSession: function() {
+		return this.session;
+	},
+	getConnection: function() {
+		return this.connection;
+	},
+	addListener: function(eventType, methodCallBack){
+		DispatcherManager.addListener(eventType, methodCallBack);
+	},
+	removeListener: function(eventType, methodCallBack){
+		DispatcherManager.removeListener(eventType, methodCallBack);						
+	},
+	setActionUpdate: function(url) {
+		this.getConnection().url = url;
+	}
+};
+function onPlatformUpdated(request, json) {
+	if (request == null) {
+		return;
+	}
+	PKPRequestParser.parse(request);
+}
+
+function onApplicationLoading() {
+
+}
+function onApplicationStarted() {
+	PKP.getSession().setApplicationStatus(PKPApplicationStatus.APPLICATION_STARTED);
+}
+function onApplicationFinished() {
+	PKP.getSession().setApplicationStatus(PKPApplicationStatus.APPLICATION_CLOSED);
+}
+function onApplicationAccountLoggedIn(arguments) {
+	if (arguments == null) {return;}
+	var username = arguments.length > 0 ? arguments[0] : null;
+	var mshash = arguments.length >= 2 ? arguments[1] : null;
+	pkpApplicationVariable.currentAccountName = username;
+	pkpApplicationVariable.currentMsHash = PKPUtils.isEmpty(mshash) === false ? mshash : null;
+	
+	PKP.getSession().setApplicationStatus(PKPApplicationStatus.ACCOUNT_LOGGED_IN);
+	
+	PKP.connection.updatePlatform();
+}
+function onApplicationAccountLoggedOut() {
+	var previousStatus = PKP.getSession().getApplicationStatus();
+	
+	PKP.getSession().setApplicationStatus(PKPApplicationStatus.APPLICATION_STARTED);
+	if (previousStatus == PKPApplicationStatus.USER_LOGGED_IN) {
+		PKP.connection.updatePlatform();
+		stopObserve();
+	}
+}
+function onApplicationUserLoggedIn(username) {
+	pkpApplicationVariable.currentUsername = username;
+	PKP.getSession().setApplicationStatus(PKPApplicationStatus.USER_LOGGED_IN);
+	startObserve();
+}
+function onApplicationUserLoggedOut() {
+	PKP.getSession().setApplicationStatus(PKPApplicationStatus.ACCOUNT_LOGGED_IN);
+	
+	PKP.connection.updatePlatform();
+	stopObserve();
+}
+
+PKP.addListener(PKPPlatformEvent.PLATFORM_UPDATED, onPlatformUpdated);
+PKP.session = new SessionDispatcher();
+PKP.connection = new PKPComm(PKPPlatformUrl.updateAction, 0, false);
+PKP.connection.buildPlatformParameters = PKPPlatformUtils.buildPlatformParameters;
+
+
+var hasFocus = true;
+var observing = false;
+function startObserve() {
+	hasFocus = false;
+	Event.observe(window, 'focus', onFocusIn);
+	Event.observe(window, 'blur', onFocusOut);
+	
+	Event.observe(document, 'focusin', onFocusIn);
+	Event.observe(document, 'focus', onFocusIn);
+	
+	observing = true;
+}
+function stopObserve() {
+	Event.stopObserving(window, 'focus', onFocusIn);
+	Event.stopObserving(window, 'blur', onFocusOut);
+	
+	Event.stopObserving(document, 'focusin', onFocusIn);
+	Event.stopObserving(document, 'focus', onFocusIn);	
+	observing = false;
+}
+function onFocusIn() {
+	if (hasFocus === true) {
+		return;
+	}
+	hasFocus = true;
+	
+	PKP.connection.updatePlatform();
+}
+function onFocusOut() {
+	if (hasFocus === false) {
+		return;
+	}
+	hasFocus = false;
+}
+Event.observe(window, 'load', onWindowLoaded);
+function onWindowLoaded() {
+	loadSWF();
+}
+function onWindowLoadDelayTimerCompleted() {
+	loadSWF();
+}
+function loadSWF() {
+	if (windowLoadDelayTimer != null) {
+		try {
+			windowLoadDelayTimer.stop();
+			windowLoadDelayTimer = null;
+		} catch (e) {}
+	}
+	PKP.loaded = true;
+	var buttonParams = {"wmode": "transparent", "menu": false};
+	PKPSwf.createChildElements($$("div.flash"), "9.0.0", buttonParams);
+}
+function importSWF() {
+	var buttonParams = {"wmode": "transparent", "menu": false};
+	PKPSwf.createChildElements($$("div.flash"), "9.0.0", buttonParams);		
+}
+var windowLoadDelayTimer = new PeriodicalExecuter(onWindowLoadDelayTimerCompleted, 10);
+
+function onAjaxRequestCompleted(response)
+{
+	PKPRequestParser.parse(response);
+}
+
+
+function popup_component(url)
+{
+	var popupComm = new PKPComm(url);
+	popupComm.updatePlatform();
+}
+
+function popupStopClickEvent(event)
+{
+     if (event.stopPropagation){
+       event.stopPropagation();
+     }
+     else if(window.event){
+      window.event.cancelBubble=true;
+     }
+     onBodyClicked(event);	
+}
+
+function onBodyClicked(e){
+	var targ;
+	if (!e)
+		var e = window.event;
+	if (e.target)
+		targ = e.target;
+	else if (e.srcElement)
+		targ = e.srcElement;
+	if (targ.nodeType == 3) // defeat Safari bug
+		targ = targ.parentNode;
+	
+	
+	
+	if(targ.getAttribute('tag_category') && targ.getAttribute('tag_action') && targ.getAttribute('tag_label'))
+	{
+		trackEvent(targ.getAttribute('tag_category'), targ.getAttribute('tag_action'), targ.getAttribute('tag_label'));
+	}
+	else
+		console.log(targ);
+
+	/* findPos can be used to find the relative position of the clicked element
+	 * Have to be rewriten a bit to be useful for creating a heat map
+	 */
+	function findPos(obj) {
+		var curleft = curtop = 0;
+		if (obj.offsetParent) {
+			do {
+					curleft += obj.offsetLeft;
+					curtop += obj.offsetTop;
+				} while (obj = obj.offsetParent);
+				return [curleft,curtop];
+			}
+	}
+}
+
+function trackEvent(category, action, label, value, nonInteraction, debug)
+{
+	category = category || null;
+	action = action || null;
+	label = label || null;
+	
+	if(category == null || action == null || label == null)
+		return;
+	
+	var parameter = ['b._trackEvent', category, action, label];
+	
+	if(value)
+		parameter.push(value);
+	
+	if(nonInteraction)
+		parameter.push(true);
+	
+	if(debug)
+	{
+	 	console.log(parameter);
+	}
+	
+	_gaq.push(parameter);
+}
